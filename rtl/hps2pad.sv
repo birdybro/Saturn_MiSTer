@@ -92,12 +92,13 @@ module HPS2PAD (
 	wire [7:0] p2_m_y       = mouse_y | p2_mjy_dz;
 
 	parameter PAD_DIGITAL     = 0;
-	parameter PAD_VIRT_LGUN   = 1;
+	parameter PAD_OFF         = 1;
 	parameter PAD_WHEEL       = 2;
 	parameter PAD_MISSION     = 3;
 	parameter PAD_3D          = 4;
 	parameter PAD_DUALMISSION = 5;
 	parameter PAD_MOUSE       = 6;
+	parameter PAD_VIRT_LGUN   = 7;
 	
 	bit [ 3: 0] OUT1,OUT2;
 	bit         TL1,TL2;
