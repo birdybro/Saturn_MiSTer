@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(wc -l /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/Saturn/*.sv /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/Saturn/VDP*/*.sv /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/Saturn/SCU/*.sv /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/Saturn/SCSP/*.sv /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/Saturn/CD/*.sv)"
     ]
   }
 }
