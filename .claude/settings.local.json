@@ -3,7 +3,12 @@
     "allow": [
       "Bash(ls:*)",
       "Bash(wc -l /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/Saturn/*.sv /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/Saturn/VDP*/*.sv /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/Saturn/SCU/*.sv /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/Saturn/SCSP/*.sv /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/Saturn/CD/*.sv)",
-      "Bash(wc -l /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/SH/core/*.sv /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/SH/SH7604/*.sv /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/FX68K/*.sv)"
+      "Bash(wc -l /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/SH/core/*.sv /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/SH/SH7604/*.sv /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/FX68K/*.sv)",
+      "Bash(wc -l /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/SH/core/*.sv /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer/rtl/SH/SH7604/*.sv)",
+      "Bash(wc:*)",
+      "Bash(find /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer -type f \\\\\\( -name \"*.sv\" -o -name \"*.v\" -o -name \"*.vhd\" \\\\\\) -exec wc -l {} +)",
+      "Bash(xargs grep:*)",
+      "Bash(grep:*)"
     ]
   }
 }
