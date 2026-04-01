@@ -8,7 +8,8 @@
       "Bash(wc:*)",
       "Bash(find /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer -type f \\\\\\( -name \"*.sv\" -o -name \"*.v\" -o -name \"*.vhd\" \\\\\\) -exec wc -l {} +)",
       "Bash(xargs grep:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Read(//tmp/**)"
     ]
   }
 }
