@@ -9,7 +9,10 @@
       "Bash(find /c/Users/kcoleman/Documents/GitHub/Saturn_MiSTer -type f \\\\\\( -name \"*.sv\" -o -name \"*.v\" -o -name \"*.vhd\" \\\\\\) -exec wc -l {} +)",
       "Bash(xargs grep:*)",
       "Bash(grep:*)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git push:*)"
     ]
   }
 }
