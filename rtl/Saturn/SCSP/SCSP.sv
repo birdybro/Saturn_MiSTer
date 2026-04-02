@@ -783,8 +783,17 @@ module SCSP (
 				NEW_EVOL = OP4_EVOL;
 				NEW_EST = OP4_EST;
 				
-				ATTACK_VOL_CALC = {1'b0,OP4_EVOL} + (ENV_STEP ? $signed($signed(~{1'b0,OP4_EVOL}) >>> SRAC[4:0]) : 11'd0);
-				DECAY_VOL_CALC = {1'b0,OP4_EVOL} + (ENV_STEP ? $signed(10'd16 >>> SRAC[4:0]) : 11'd0);
+				// Share one barrel shifter for both attack and decay envelope calculations.
+				// Only one result is consumed per slot (selected by OP4_EST), so mux the
+				// shifter input: inverted EVOL for attack, constant 16 for decay.
+				begin
+					bit signed [10:0] shift_in;
+					bit signed [10:0] shift_out;
+					shift_in = (OP4_EST == EST_ATTACK) ? $signed(~{1'b0,OP4_EVOL}) : $signed(11'(10'd16));
+					shift_out = ENV_STEP ? $signed(shift_in >>> SRAC[4:0]) : 11'd0;
+					ATTACK_VOL_CALC = {1'b0,OP4_EVOL} + shift_out;
+					DECAY_VOL_CALC  = {1'b0,OP4_EVOL} + shift_out;
+				end
 				if (OP4.RST) begin
 					NEW_EVOL = 10'h3FF;
 					NEW_EST = EST_RELEASE;

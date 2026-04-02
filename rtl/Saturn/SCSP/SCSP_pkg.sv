@@ -420,14 +420,14 @@ package SCSP_PKG;
 	
 	function bit [15:0] Interpolate(input bit [15:0] WAVE0, input bit [15:0] WAVE1, bit [5:0] PHASE);
 		bit [ 6:0] PHASE_NEG;
-		bit [21:0] TEMP0,TEMP1;
+		(* multstyle = "dsp" *) bit [21:0] TEMP0,TEMP1;
 		bit [21:0] SUM;
-		
+
 		PHASE_NEG = 7'h40 - PHASE;
 		TEMP0 = $signed(WAVE0) * PHASE_NEG;
 		TEMP1 = $signed(WAVE1) * PHASE;
 		SUM = $signed(TEMP0) + $signed(TEMP1);
-	
+
 		return SUM[21:6];
 	endfunction
 	
@@ -566,12 +566,12 @@ package SCSP_PKG;
 	endfunction
 	
 	function bit signed [15:0] VolCalc(bit signed [15:0] WAVE, bit [9:0] LEVEL);
-		bit [22:0] MULT;
+		(* multstyle = "dsp" *) bit [22:0] MULT;
 		bit [15:0] RES;
-		
+
 		MULT = $signed(WAVE) * ({2'b01,~LEVEL[5:0]});
 		RES = $signed($signed(MULT[22:7])>>>LEVEL[9:6]);
-		
+
 		return RES;
 	endfunction
 	
@@ -608,8 +608,8 @@ package SCSP_PKG;
 	endfunction
 	
 	function bit [25:0] DSPMult(bit [23:0] X, bit [12:0] Y);
-		bit [37:0] M;
-		
+		(* multstyle = "dsp" *) bit [37:0] M;
+
 		M = $signed(X) * $signed(Y);
 		return M[37:12];
 	endfunction
