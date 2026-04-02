@@ -1783,90 +1783,79 @@ package VDP2_PKG;
 		return addr;
 	endfunction
 	
-	function bit [19:1] NxCHAddr(input PN_t NxPN[4], input bit [2:0] NxCH_CNT, input bit [10:0] NxOFFX, input bit [10:0] NxOFFY, 
-	                             input bit [2:0] NxCHCN, input bit NxCHSZ, input bit NxZMHF, input bit NxZMQT);
+	// Common character address core shared by NxCHAddr and NxCHAddr2.
+	// Computes flip, cell offset, and final address from a pre-selected PN and OFFX.
+	// The cell_offs and ch_cnt sub-fields occupy non-overlapping bit positions,
+	// so we build a single offset by concatenation instead of multiple additions.
+	function bit [19:1] NxCHAddrCalc(input PN_t PN, input bit [10:0] OFFX, input bit [10:0] NxOFFY,
+	                                  input bit [2:0] NxCHCN, input bit NxCHSZ, input bit [2:0] ch_cnt);
 		bit  [19: 1] addr;
-		bit  [ 1: 0] ZM_MASK;
-		PN_t         PN;
-		bit  [10: 0] OFFX;
 		bit  [ 4: 0] cell_offs;
 		bit  [ 3: 0] x_offs;
 		bit  [ 3: 0] y_offs;
+		bit  [ 8: 0] ch_offset;
+
+		x_offs =   OFFX[3:0] ^ {4{PN.HF}};
+		y_offs = NxOFFY[3:0] ^ {4{PN.VF}};
+
+		case (NxCHSZ)
+			1'b0: cell_offs = {      1'b0,     1'b0,y_offs[2:0] };
+			1'b1: cell_offs = { y_offs[3],x_offs[3],y_offs[2:0] };
+		endcase
+		case (NxCHCN)
+			3'b000:          ch_offset = {3'b000,cell_offs,                 1'b0};	//4bits/dot, 16 colors
+			3'b001:          ch_offset = {2'b00, cell_offs, ch_cnt[0],      1'b0};	//8bits/dot, 256 colors
+			3'b010, 3'b011:  ch_offset = {1'b0,  cell_offs, ch_cnt[1:0],   1'b0};	//16bits/dot, 2048/32768 colors
+			3'b100:          ch_offset = {       cell_offs, ch_cnt[2:0],   1'b0};	//32bits/dot, 16M colors
+			default:         ch_offset = '0;
+		endcase
+		addr = {PN.CHRN[14:0],4'b0000} + {10'b0000000000,ch_offset};
+
+		return addr;
+	endfunction
+
+	function bit [19:1] NxCHAddr(input PN_t NxPN[4], input bit [2:0] NxCH_CNT, input bit [10:0] NxOFFX, input bit [10:0] NxOFFY,
+	                             input bit [2:0] NxCHCN, input bit NxCHSZ, input bit NxZMHF, input bit NxZMQT);
+		bit  [ 1: 0] ZM_MASK;
+		PN_t         PN;
+		bit  [10: 0] OFFX;
 		bit  [ 2: 0] ch_cnt;
-		
+
 		ZM_MASK = {NxZMQT,NxZMQT|NxZMHF};
 		case (NxCHCN)
 			3'b000:  PN = NxPN[      NxCH_CNT[1:0]&ZM_MASK[1:0] ];	//4bits/dot, 16 colors
 			3'b001:  PN = NxPN[{1'b0,NxCH_CNT[1:1]&ZM_MASK[0:0]}];	//8bits/dot, 256 colors
 			default: PN = NxPN[0];
 		endcase
-		
 		case (NxCHCN)
 			3'b000:  OFFX = NxOFFX + {     NxCH_CNT[1:0]&ZM_MASK[1:0],3'b000};
 			3'b001:  OFFX = NxOFFX + {1'b0,NxCH_CNT[1:1]&ZM_MASK[0:0],3'b000};
 			default: OFFX = NxOFFX;
 		endcase
-
-		x_offs =   OFFX[3:0] ^ {4{PN.HF}};
-		y_offs = NxOFFY[3:0] ^ {4{PN.VF}};
 		ch_cnt = NxCH_CNT[2:0] ^ {3{PN.HF}};
-		
-		case (NxCHSZ)
-			1'b0: cell_offs = {      1'b0,     1'b0,y_offs[2:0] };
-			1'b1: cell_offs = { y_offs[3],x_offs[3],y_offs[2:0] };
-		endcase
-		case (NxCHCN)
-			3'b000: addr = {PN.CHRN[14:0],4'b0000} + {13'b000000000000,cell_offs[4:0],1'b0   };									//4bits/dot, 16 colors
-			3'b001: addr = {PN.CHRN[14:0],4'b0000} + {12'b00000000000, cell_offs[4:0],2'b00  } + {ch_cnt[0:0],1'b0};		//8bits/dot, 256 colors
-			3'b010,
-			3'b011: addr = {PN.CHRN[14:0],4'b0000} + {11'b0000000000,  cell_offs[4:0],3'b000 } + {ch_cnt[1:0],1'b0};		//16bits/dot, 2048/32768 colors
-			3'b100: addr = {PN.CHRN[14:0],4'b0000} + {10'b000000000,   cell_offs[4:0],4'b0000} + {ch_cnt[2:0],1'b0};		//32bits/dot, 16M colors
-			default: addr = '0;
-		endcase
-	
-		return addr;
+
+		return NxCHAddrCalc(PN, OFFX, NxOFFY, NxCHCN, NxCHSZ, ch_cnt);
 	endfunction
-	
-	function bit [19:1] NxCHAddr2(input PN_t NxPN[2], input bit [2:0] NxCH_CNT, input bit [10:0] NxOFFX, input bit [10:0] NxOFFY, 
+
+	function bit [19:1] NxCHAddr2(input PN_t NxPN[2], input bit [2:0] NxCH_CNT, input bit [10:0] NxOFFX, input bit [10:0] NxOFFY,
 	                             input bit [2:0] NxCHCN, input bit NxCHSZ, input bit NxZMHF, input bit NxZMQT);
-		bit  [19: 1] addr;
 		PN_t         PN;
 		bit  [10: 0] OFFX;
-		bit  [ 4: 0] cell_offs;
-		bit  [ 3: 0] x_offs;
-		bit  [ 3: 0] y_offs;
 		bit  [ 2: 0] ch_cnt;
-		
+
 		case (NxCHCN)
 			3'b000:  PN = NxPN[0];	//4bits/dot, 16 colors
 			3'b001:  PN = NxPN[NxCH_CNT[0]];	//8bits/dot, 256 colors
 			default: PN = NxPN[0];
 		endcase
-		
 		case (NxCHCN)
 			3'b000:  OFFX = NxOFFX + {NxZMHF&NxCH_CNT[0],3'b000};
 			3'b001:  OFFX = NxOFFX + {NxZMHF&NxCH_CNT[1],3'b000};
 			default: OFFX = NxOFFX;
 		endcase
-
-		x_offs =   OFFX[3:0] ^ {4{PN.HF}};
-		y_offs = NxOFFY[3:0] ^ {4{PN.VF}};
 		ch_cnt = NxCH_CNT[2:0] ^ {3{PN.HF}};
-		
-		case (NxCHSZ)
-			1'b0: cell_offs = {      1'b0,     1'b0,y_offs[2:0] };
-			1'b1: cell_offs = { y_offs[3],x_offs[3],y_offs[2:0] };
-		endcase
-		case (NxCHCN)
-			3'b000: addr = {PN.CHRN[14:0],4'b0000} + {13'b000000000000,cell_offs[4:0],1'b0   };									//4bits/dot, 16 colors
-			3'b001: addr = {PN.CHRN[14:0],4'b0000} + {12'b00000000000, cell_offs[4:0],2'b00  } + {ch_cnt[0:0],1'b0};		//8bits/dot, 256 colors
-			3'b010,
-			3'b011: addr = {PN.CHRN[14:0],4'b0000} + {11'b0000000000,  cell_offs[4:0],3'b000 } + {ch_cnt[1:0],1'b0};		//16bits/dot, 2048/32768 colors
-			3'b100: addr = {PN.CHRN[14:0],4'b0000} + {10'b000000000,   cell_offs[4:0],4'b0000} + {ch_cnt[2:0],1'b0};		//32bits/dot, 16M colors
-			default: addr = '0;
-		endcase
-	
-		return addr;
+
+		return NxCHAddrCalc(PN, OFFX, NxOFFY, NxCHCN, NxCHSZ, ch_cnt);
 	endfunction
 	
 	function bit [19:1] NxBMAddr(input bit [2:0] NxMP, input bit [2:0] NxCH_CNT, input bit [2:0] NxBM_CNT, input bit [10:0] NxOFFX, input bit [10:0] NxOFFY, 
@@ -2117,23 +2106,26 @@ package VDP2_PKG;
 		bit [ 4: 0] cell_offs;
 		bit [ 3: 0] x_offs;
 		bit [ 3: 0] y_offs;
+		bit [ 8: 0] ch_offset;
 
 		x_offs = RxOFFX[3:0] ^ {4{RxPNx.HF}};
 		y_offs = RxOFFY[3:0] ^ {4{RxPNx.VF}};
-		
+
 		case (RxCHSZ)
 			1'b0: cell_offs = {      1'b0,     1'b0,y_offs[2:0] };
 			1'b1: cell_offs = { y_offs[3],x_offs[3],y_offs[2:0] };
 		endcase
+		// cell_offs and x_offs sub-fields occupy non-overlapping bit positions;
+		// build a single offset by concatenation instead of multiple additions.
 		case (RxCHCN)
-			3'b000: addr = {RxPNx.CHRN[14:0],4'b0000} + {13'b000000000000,cell_offs[4:0],            1'b0};	//4bits/dot, 16 colors
-			3'b001: addr = {RxPNx.CHRN[14:0],4'b0000} + {12'b00000000000, cell_offs[4:0],x_offs[2:2],1'b0};	//8bits/dot, 256 colors
-			3'b010,
-			3'b011: addr = {RxPNx.CHRN[14:0],4'b0000} + {11'b0000000000,  cell_offs[4:0],x_offs[2:1],1'b0};	//16bits/dot, 2048/32768 colors
-			3'b100: addr = {RxPNx.CHRN[14:0],4'b0000} + {10'b000000000,   cell_offs[4:0],x_offs[2:0],1'b0};	//32bits/dot, 16M colors
-			default: addr = '0;
+			3'b000:          ch_offset = {3'b000,cell_offs,                  1'b0};	//4bits/dot, 16 colors
+			3'b001:          ch_offset = {2'b00, cell_offs, x_offs[2],       1'b0};	//8bits/dot, 256 colors
+			3'b010, 3'b011:  ch_offset = {1'b0,  cell_offs, x_offs[2:1],    1'b0};	//16bits/dot, 2048/32768 colors
+			3'b100:          ch_offset = {       cell_offs, x_offs[2:0],    1'b0};	//32bits/dot, 16M colors
+			default:         ch_offset = '0;
 		endcase
-	
+		addr = {RxPNx.CHRN[14:0],4'b0000} + {10'b0000000000,ch_offset};
+
 		return addr;
 	endfunction
 	
