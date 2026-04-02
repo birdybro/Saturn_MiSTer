@@ -1202,8 +1202,9 @@ module emu
 	
 	
 `ifndef DEBUG
+`ifndef LIGHTGUN_DISABLE
 	wire lg_p1_ena = (status[18:15]==4'd1);
-	
+
 	wire       lg_p1_sensor;
 	wire       lg_p1_a;
 	wire       lg_p1_b;
@@ -1217,7 +1218,7 @@ module emu
 
 	wire CROSS_DRAW_P1;
 	wire [2:0] lg_p1_target = {2'b00, CROSS_DRAW_P1};	// RED Crosshair.
-	
+
 	lightgun  lightgun_p1
 	(
 		.CLK(clk_sys),
@@ -1233,24 +1234,24 @@ module emu
 
 		.BTN_MODE(gun_p1_btn_mode),	// 0=Use Joystick buttons for LG.
 												// 1=Use Mouse buttons for LG.
-		
+
 		.RELOAD(1'b1),						// Enable Auto-Reload.
 
 		.HDE(HBL_N),						// Blanking signals are Active-Low. So should act as "DE" (Data Enable) signals when High!
 		.VDE(VBL_N),						// ie. No need to invert here.
 		.CE_PIX(DCLK),
-		
+
 		.FIELD(FIELD),
 		.INTERLACE(INTERLACE),
 		.HRES(HRES), 						// input [1:0]   [1]:0-normal,1-hi-res; [0]:0-320p,1-352p
 		.VRES(VRES), 						// input [1:0]   0-224,1-240,2-256
 		.DCE_R(DCE_R),
-		
+
 		.SIZE(gun_p1_cross_size),
 		.SENSOR_DELAY(gun_p1_sensor_delay),	// Originally based on the MD lightgun module.
 														// Not sure if any Saturn LG games use polling, or even need this? EA
 		.CROSS_DRAW(CROSS_DRAW_P1),
-		
+
 		.SENSOR(lg_p1_sensor),		// output  SENSOR  ("Light detected" signal, to VDP2).
 		.BTN_A(lg_p1_a),				// output  BTN_A   (used as the Trigger "button" signal, to HPS2PAD).
 		.BTN_B(lg_p1_b),				// output  BTN_B   (used for Auto-Reload in this module - Don't use the BTN_B / lg_p1_b output when using the RELOAD option!)
@@ -1260,7 +1261,7 @@ module emu
 
 
 	wire lg_p2_ena = (status[45:42]==4'd1);
-	
+
 	wire       lg_p2_sensor;
 	wire       lg_p2_a;
 	wire       lg_p2_b;
@@ -1271,7 +1272,7 @@ module emu
 	wire       gun_p2_btn_mode   = status[58];
 	wire [1:0] gun_p2_cross_size = status[60:59];
 	wire [7:0] gun_p2_sensor_delay = 8'd2;
-	
+
 	wire CROSS_DRAW_P2;
 	wire [2:0] lg_p2_target = {1'b0, CROSS_DRAW_P2, 1'b0};	// GREEN Crosshair.
 
@@ -1290,45 +1291,60 @@ module emu
 
 		.BTN_MODE(gun_p2_btn_mode),	// 0=Use Joystick buttons for LG.
 												// 1=Use Mouse buttons for LG.
-		
+
 		.RELOAD(1'b1),						// Enable Auto-Reload.
 
 		.HDE(HBL_N),						// Blanking signals are Active-Low. So should act as "DE" (Data Enable) signals when High!
 		.VDE(VBL_N),						// ie. No need to invert here.
 		.CE_PIX(DCLK),
-		
+
 		.FIELD(FIELD),
 		.INTERLACE(INTERLACE),
 		.HRES(HRES), 						// input [1:0]   [1]:0-normal,1-hi-res; [0]:0-320p,1-352p
 		.VRES(VRES), 						// input [1:0]   0-224,1-240,2-256
 		.DCE_R(DCE_R),
-		
+
 		.SIZE(gun_p2_cross_size),
 		.SENSOR_DELAY(gun_p2_sensor_delay),	// Originally based on the MD lightgun module.
 														// Not sure if any Saturn LG games use polling, or even need this? EA
 		.CROSS_DRAW(CROSS_DRAW_P2),
-		
+
 		.SENSOR(lg_p2_sensor),		// output  SENSOR  ("Light detected" signal, to VDP2).
 		.BTN_A(lg_p2_a),				// output  BTN_A   (used as the Trigger "button" signal, to HPS2PAD).
 		.BTN_B(lg_p2_b),				// output  BTN_B   (used for Auto-Reload in this module - Don't use the BTN_B / lg_p1_b output when using the RELOAD option!)
 		.BTN_C(lg_p2_c),
 		.BTN_START(lg_p2_start)		// (used as the Start button signal, to HPS2PAD).
 	);
-`else
+`else // LIGHTGUN_DISABLE
 	wire lg_p1_ena = 0;
 	wire lg_p1_a = 0;
 	wire lg_p1_start = 0;
 	wire lg_p1_sensor = 0;
 	wire [2:0] lg_p1_target = '0;
 	wire [1:0] gun_p1_cross_size = '0;
-		
+
 	wire lg_p2_ena = 0;
 	wire lg_p2_a = 0;
 	wire lg_p2_start = 0;
-	wire lg_p2_sensor = 0;	
+	wire lg_p2_sensor = 0;
 	wire [2:0] lg_p2_target = '0;
 	wire [1:0] gun_p2_cross_size = '0;
-`endif
+`endif // LIGHTGUN_DISABLE
+`else // DEBUG
+	wire lg_p1_ena = 0;
+	wire lg_p1_a = 0;
+	wire lg_p1_start = 0;
+	wire lg_p1_sensor = 0;
+	wire [2:0] lg_p1_target = '0;
+	wire [1:0] gun_p1_cross_size = '0;
+
+	wire lg_p2_ena = 0;
+	wire lg_p2_a = 0;
+	wire lg_p2_start = 0;
+	wire lg_p2_sensor = 0;
+	wire [2:0] lg_p2_target = '0;
+	wire [1:0] gun_p2_cross_size = '0;
+`endif // DEBUG
 
 	
 	wire [13:1] CD_BUF_ADDR;
