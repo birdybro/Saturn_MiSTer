@@ -282,9 +282,18 @@ module SH_core
 	assign ID_DECI_RAW = Decode(DEC_IR, STATE, 1'b0, VER);
 	assign BR_COND_DEC = ID_DECI_RAW.BR.BI & ((SR_T == ID_DECI_RAW.BR.BCV) | (ID_DECI_RAW.BR.BT == UCB));
 	assign BR_COND = BR_COND_DEC;
-	assign ID_DECI = Decode(DEC_IR, STATE, BR_COND_DEC, VER);
-	
-	
+
+	// Patch BC-dependent fields instead of running a second full Decode.
+	// BC only affects PCW and LST for conditional branches (BT, BF, BT/S, BF/S).
+	wire ID_IS_CONDBR = ID_DECI_RAW.BR.BI & (ID_DECI_RAW.BR.BT == CB);
+	always_comb begin
+		ID_DECI = ID_DECI_RAW;
+		if (ID_IS_CONDBR) begin
+			ID_DECI.PCW = BR_COND_DEC;
+			ID_DECI.LST = BR_COND_DEC ? 3'd1 : 3'd0;
+		end
+	end
+
 	wire BP_T_EXID = ID_DECI_RAW.BR.BI & ID_DECI_RAW.BR.BT == CB & PIPE.EX.DI.CTRL.W & PIPE.EX.DI.CTRL.S == SR_;
 	always_comb begin
 		if (BP_T_EXID) begin
